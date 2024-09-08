@@ -681,6 +681,62 @@ void OpenCVFisheyeCameraModel::unproject(const std::vector<double> &params, cons
 const std::vector<size_t> OpenCVFisheyeCameraModel::focal_idx = {0, 1};
 const std::vector<size_t> OpenCVFisheyeCameraModel::principal_point_idx = {2, 3};
 
+
+///////////////////////////////////////////////////////////////////
+// Sphere Camera 
+//   params = 1., width / 2., height / 2.
+//   DK contribution
+
+void SphereCameraModel::project(const std::vector<double> &params, const Eigen::Vector2d &x,
+                                Eigen::Vector2d *xp) {
+  
+  const double c1 = params[1];
+  const double c2 = params[2];
+
+  const double w = double(2) * c1;
+  const double h = double(2) * c2;
+
+  const double size = std::max<double>(w, h);
+
+  (*xp)(0) = x(0) * size + c1;
+  (*xp)(1) = x(1) * size + c2;
+}
+
+void SphereCameraModel::project_with_jac(const std::vector<double> &params, const Eigen::Vector2d &x,
+                                         Eigen::Vector2d *xp, Eigen::Matrix2d *jac) {
+  const double c1 = params[1];
+  const double c2 = params[2];
+
+  const double w = double(2) * c1;
+  const double h = double(2) * c2;
+
+  const double size = std::max<double>(w, h);
+
+  (*xp)(0) = x(0) * size + c1;
+  (*xp)(1) = x(1) * size + c2;
+
+  (*jac)(0, 0) = size;
+  (*jac)(0, 1) = 0.0;
+  (*jac)(1, 0) = 0.0;
+  (*jac)(1, 1) = size;
+}
+
+void SphereCameraModel::unproject(const std::vector<double> &params, const Eigen::Vector2d &xp,
+                                  Eigen::Vector2d *x) {
+  const double c1 = params[1];
+  const double c2 = params[2];
+
+  const double w = double(2) * c1;
+  const double h = double(2) * c2;
+  const double size = std::max<double>(w, h);
+
+  (*x)(0) = (xp(0) - c1) / size;
+  (*x)(1) = (xp(1) - c2) / size;
+}
+
+const std::vector<size_t> SphereCameraModel::focal_idx = {0};
+const std::vector<size_t> SphereCameraModel::principal_point_idx = {1, 2};
+
 ///////////////////////////////////////////////////////////////////
 // Null camera - this is used as a dummy value in various places
 // params = {}
